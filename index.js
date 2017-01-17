@@ -15,12 +15,17 @@ let VAPID_SUBJECT = process.env.VAPID_SUBJECT;
 let VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 let VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 
+//Auth secret used to authentication notification requests.
+let AUTH_SECRET = process.env.AUTH_SECRET;
+
 if (!VAPID_SUBJECT) {
     return console.error('VAPID_SUBJECT environment variable not found.')
 } else if (!VAPID_PUBLIC_KEY) {
     return console.error('VAPID_PUBLIC_KEY environment variable not found.')
 } else if (!VAPID_PRIVATE_KEY) {
     return console.error('VAPID_PRIVATE_KEY environment variable not found.')
+} else if (!AUTH_SECRET) {
+    return console.error('AUTH_SECRET environment variable not found.')
 }
 
 app.use(bodyParser.json());
@@ -39,6 +44,10 @@ app.get('/status', function (req, res) {
 });
 
 app.get('/notify/all', function (req, res) {
+    if(req.get('auth-secret') != AUTH_SECRET) {
+        console.log("Missing or incorrect auth-secret header. Rejecting request.");
+        return res.sendStatus(401);
+    }
     
     let message = req.query.message || `Willy Wonka's chocolate is the best!`;
     let clickTarget = req.query.clickTarget || `http://www.favoritemedium.com`;
